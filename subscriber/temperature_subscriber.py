@@ -1,4 +1,5 @@
 import os 
+import json
 import paho.mqtt.client as mqtt
 
 MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "mqtt-broker")
@@ -19,7 +20,17 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, message):
     topic = message.topic
     payload = message.payload.decode("utf-8")
-    print(f"Received from {topic}: {payload}")
+
+    try:
+        data = json.loads(payload)
+        temperature = data.get("temperature")
+        unit = data.get("unit")
+        category = data.get("category")
+        timestamp = data.get("timestamp")
+        print(f"Received from {topic}: {temperature}°{unit} ({category}) at {timestamp}")
+    except json.JSONDecodeError:
+        print(f"Received from {topic}: {payload} (not valid JSON)")
+    #print(f"Received from {topic}: {payload}")
 
 def main():
     client = mqtt.Client(client_id=CLIENT_ID)

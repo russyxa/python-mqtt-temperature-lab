@@ -1,6 +1,7 @@
 import os 
 import random
 import time
+import json
 from datetime import datetime
 
 import paho.mqtt.client as mqtt
@@ -19,11 +20,11 @@ def get_timestamp():
 
 def classify_temperature(temperature):
     if temperature <= 45:
-        return TOPIC_TEMP_COLD
+        return TOPIC_TEMP_COLD, "cold"
     elif temperature <= 80:
-        return TOPIC_TEMP_NICE
+        return TOPIC_TEMP_NICE, "nice"
     else: 
-        return TOPIC_TEMP_HOT
+        return TOPIC_TEMP_HOT, "hot"
     
 def main():
     client = mqtt.Client(client_id=CLIENT_ID)
@@ -35,8 +36,16 @@ def main():
     try:
         while True:
             temperature = random.randint(0,100)
-            topic = classify_temperature(temperature)
-            message = f"{temperature} degrees - {get_timestamp()}"
+            topic, category = classify_temperature(temperature)
+            payload = {
+                "temperature": temperature,
+                "unit": "F",
+                "category": category,
+                "timestamp": get_timestamp()
+            }
+            #topic = classify_temperature(temperature)
+            #message = f"{temperature} degrees - {get_timestamp()}"
+            message = json.dumps(payload)
             result = client.publish(topic, message, qos=QOS)
             result.wait_for_publish()
             print(f"Published to {topic}: {message}")
