@@ -1,0 +1,28 @@
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./broker/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  temperature-sensor:
+    build: ./sensor
+    container_name: temperature-sensor
+    environment:
+      MQTT_BROKER_HOST: mqtt-broker
+      MQTT_BROKER_PORT: 1883
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      - mqtt-broker
+
+  temperature-subscriber:
+    build: ./subscriber
+    container_name: temperature-subscriber
+    environment:
+      MQTT_BROKER_HOST: mqtt-broker
+      MQTT_BROKER_PORT: 1883
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      - mqtt-broker
